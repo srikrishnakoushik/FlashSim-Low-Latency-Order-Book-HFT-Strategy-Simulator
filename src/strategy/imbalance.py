@@ -10,7 +10,7 @@ class ImbalanceStrategy:
     def __init__(self, imbalance_threshold: float, min_qty: int):
         self.imbalance_threshold = imbalance_threshold
         self.min_qty = min_qty
-        self.order_id_counter = 1000  # Start with a high ID to avoid conflicts
+        self.order_id_counter = 1000000000  # Start with a high ID to avoid conflicts
         self.active_orders = {}  # Track our own active orders
 
     def get_order(self, book: OrderBook, timestamp: int) -> Optional[Order]:

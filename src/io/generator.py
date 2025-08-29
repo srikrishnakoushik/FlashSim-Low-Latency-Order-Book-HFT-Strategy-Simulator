@@ -2,6 +2,7 @@ import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
 import numpy as np
+import random
 
 from src.core.order import Order, Side, Trade
 from src.core.lob import OrderBook
@@ -10,11 +11,12 @@ class MarketDataGenerator:
     """
     Generates a stream of market data events and records them to Parquet.
     """
-    def __init__(self, start_time: int, event_count: int, file_path: str):
+    def __init__(self, start_time: int, event_count: int, file_path: str, volatility: float = 0.01):
         self.start_time = start_time
         self.event_count = event_count
         self.file_path = file_path
         self.book = OrderBook()
+        self.volatility = volatility
         self.order_id_counter = 0
 
     def generate_and_record(self):
@@ -23,6 +25,10 @@ class MarketDataGenerator:
         """
         all_events = []
         
+        # We need a reproducible seed for deterministic data generation
+        np.random.seed(0)
+        random.seed(0)
+
         for i in range(self.event_count):
             event_time = self.start_time + i
             
@@ -31,9 +37,9 @@ class MarketDataGenerator:
             
             if event_type == 'ADD':
                 self.order_id_counter += 1
-                price = int(1000 * (1 + np.random.uniform(-0.01, 0.01)))
-                quantity = np.random.randint(1, 100)
-                side = np.random.choice([Side.BUY, Side.SELL])
+                price = int(1000 * (1 + np.random.uniform(-self.volatility, self.volatility)))
+                quantity = random.randint(1, 100)
+                side = random.choice([Side.BUY, Side.SELL])
                 
                 order = Order(
                     order_id=self.order_id_counter,
@@ -56,7 +62,7 @@ class MarketDataGenerator:
                     'trade_quantity': None
                 })
             elif event_type == 'CANCEL' and self.book.orders:
-                order_id_to_cancel = np.random.choice(list(self.book.orders.keys()))
+                order_id_to_cancel = random.choice(list(self.book.orders.keys()))
                 self.book.cancel_order(order_id_to_cancel)
                 all_events.append({
                     'timestamp': event_time,
@@ -71,13 +77,24 @@ class MarketDataGenerator:
                 })
             elif event_type == 'MARKET':
                 self.order_id_counter += 1
-                quantity = np.random.randint(50, 200)
-                side = np.random.choice([Side.BUY, Side.SELL])
+                quantity = random.randint(50, 200)
+                side = random.choice([Side.BUY, Side.SELL])
+
+                # Fix for the TypeError: Check if best prices exist before creating a market order
+                best_price = None
+                if side == Side.BUY and self.book.best_ask is not None:
+                    best_price = self.book.best_ask
+                elif side == Side.SELL and self.book.best_bid is not None:
+                    best_price = self.book.best_bid
                 
+                # If no best price exists, we use a default price to prevent errors
+                if best_price is None:
+                    best_price = 1000
+
                 order = Order(
                     order_id=self.order_id_counter,
                     side=side,
-                    price=self.book.best_ask if side == Side.BUY else self.book.best_bid,
+                    price=best_price,
                     quantity=quantity,
                     timestamp=event_time
                 )
