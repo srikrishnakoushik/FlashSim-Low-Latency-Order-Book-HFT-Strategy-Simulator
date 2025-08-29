@@ -1,0 +1,26 @@
+[tool.black]
+line-length = 88
+target-version = ['py39']
+
+[tool.ruff]
+line-length = 88
+select = ["E", "F", "I"]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "--strict-markers --strict-config"
+testpaths = "tests"
+
+[tool.pytest]
+pythonpath = ["src"]
+
+[project]
+name = "lob-sim"
+version = "0.1.0"
+requires-python = ">=3.9"
+dependencies = [
+    "pytest",
+    "pyarrow",
+    "numpy",
+    "pandas",
+]
