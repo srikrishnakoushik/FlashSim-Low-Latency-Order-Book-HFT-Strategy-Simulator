@@ -1,66 +1,239 @@
-# FlashSim: Low-Latency Limit Order Book & HFT Simulator
+ 
+### Low-Latency Limit Order Book & HFT Strategy Simulator
 
-## Project Overview
+FlashSim is a **production-grade, low-latency Limit Order Book (LOB) simulator** designed for **developing, testing, and backtesting high-frequency trading (HFT) strategies**.
 
-FlashSim is a production-grade, low-latency Limit Order Book (LOB) simulator designed for developing and backtesting high-frequency trading (HFT) strategies. This project provides a complete end-to-end framework, including a high-performance matching engine, a market data I/O pipeline, a backtester with advanced analytics, and a real-time visualization dashboard.
+The project provides an **end-to-end simulation framework**, including a deterministic matching engine, a configurable market data pipeline, a backtesting engine with analytics, and a real-time visualization dashboard.
 
-The core of the simulator is a price-time priority matching engine built in pure Python. Its modular design allows for easy integration of new strategies and potential acceleration of critical paths using C++ in future versions.
+The core of FlashSim is a **price–time priority matching engine implemented in pure Python**, with a modular architecture that allows future acceleration of performance-critical paths using C++ or other low-level optimizations.
 
-## Key Features
+---
 
-- **Low-Latency Matching Engine**: A correct and deterministic order book that handles adds, cancels, and partial fills with price-time priority.
-- **Dynamic Data Pipeline**: Generates and records synthetic market data with configurable volatility, allowing for robust backtesting across different market environments.
-- **Microstructure Strategy**: A simple imbalance-based strategy is included to demonstrate the backtesting functionality.
-- **Comprehensive Backtester**: Simulates trades and reports key metrics such as PnL, inventory, and win rate.
-- **Real-time Dashboard**: A Streamlit application to visualize the order book and live trades as the simulation runs.
-- **Professional CLI**: A user-friendly command-line interface for running different parts of the application.
+## 📌 Project Overview
 
-## Repository Structure
+High-frequency trading strategies depend heavily on:
+
+- Market microstructure behavior  
+- Order queue positioning  
+- Latency and execution priority  
+- Deterministic matching logic  
+
+Most academic models abstract these details away.
+
+**FlashSim focuses on execution realism rather than prediction**, allowing strategies to be evaluated under realistic order book dynamics and latency-sensitive conditions.
+
+---
+
+## 🎯 Key Features
+
+- **Low-Latency Matching Engine**  
+  - Deterministic limit order book  
+  - Price–time priority matching  
+  - Supports adds, cancels, partial fills  
+
+- **Dynamic Market Data Pipeline**  
+  - Synthetic market data generation  
+  - Configurable volatility regimes  
+  - Market replay for reproducible experiments  
+
+- **Microstructure Trading Strategy**  
+  - Imbalance-based strategy included  
+  - Demonstrates interaction with the order book  
+
+- **Comprehensive Backtester**  
+  - Simulates trades and execution  
+  - Reports PnL, inventory, win rate, and fills  
+
+- **Real-Time Visualization Dashboard**  
+  - Streamlit-based UI  
+  - Live order book and trade visualization  
+
+- **Professional CLI Interface**  
+  - Flexible command-line execution  
+  - Supports backtesting and dashboard modes  
+
+---
+
+## 🏗️ System Architecture
+
+```mermaid
+flowchart TD
+    CLI[CLI / Runner]
+    GEN[Market Data Generator]
+    LOB[Limit Order Book Engine]
+    STRAT[Trading Strategy]
+    BT[Backtester & Metrics]
+    DASH[Streamlit Dashboard]
+
+    CLI --> GEN
+    GEN --> LOB
+    STRAT --> LOB
+    LOB --> BT
+    LOB --> DASH
+````
+
+---
+
+## 🔄 Execution Flow
+
+1. Market events are generated or replayed
+2. Orders are submitted to the limit order book
+3. Matching engine processes events using price–time priority
+4. Strategy reacts to order book state and submits orders
+5. Trades are recorded by the backtester
+6. Metrics and analytics are computed
+7. Live state is optionally visualized in the dashboard
+
+---
+
+## 🧩 Repository Structure
+
+```
 lob-sim/
-├── data/                  # Generated market data files (.parquet)
+├── data/                 # Generated market data (.parquet)
 ├── src/
-│   ├── core/              # Core Order Book logic and data structures
+│   ├── core/             # Core order book logic
 │   │   ├── lob.py
 │   │   └── order.py
-│   ├── io/                # Market data generator and replay engine
+│   ├── io/               # Market data generation & replay
 │   │   ├── generator.py
 │   │   └── replay.py
-│   ├── backtest/          # Backtesting harness and analytics
+│   ├── backtest/         # Backtesting engine & analytics
 │   │   └── backtester.py
-│   ├── strategy/          # Trading strategies
+│   ├── strategy/         # Trading strategies
 │   │   └── imbalance.py
-│   └── dash/              # Streamlit dashboard application
+│   └── dash/             # Streamlit dashboard
 │       └── app.py
-├── run.py                 # Main script to run simulations
-├── run_all.sh             # Script to run the dashboard and backtest together
-└── pyproject.toml         # Python project configuration and dependencies
+├── run.py                # Main execution script
+├── run_all.sh             # Combined dashboard + backtest runner
+└── pyproject.toml        # Project configuration & dependencies
+```
 
-## How to Run
+---
 
-### 1. Setup the Environment
+## ⚙️ Technology Stack
+
+| Component     | Technology             |
+| ------------- | ---------------------- |
+| Language      | Python 3.9+            |
+| Data          | NumPy, Pandas, PyArrow |
+| Visualization | Streamlit              |
+| Storage       | Parquet                |
+| Tooling       | CLI, Shell Scripts     |
+
+---
+
+## 🛠️ Setup & Installation
+
+### 1️⃣ Create Virtual Environment
 
 ```bash
-# Create and activate a virtual environment
 python3.9 -m venv .venv
 source .venv/bin/activate
+```
 
-# Install dependencies from pyproject.toml
+---
+
+### 2️⃣ Install Dependencies
+
+```bash
 pip install pytest black ruff pyarrow numpy pandas streamlit
+```
 
-# Run a low volatility backtest
+(Dependencies are defined in `pyproject.toml`.)
+
+---
+
+## ▶️ How to Run
+
+### Run a Low-Volatility Backtest
+
+```bash
 python3 run.py --events 5000 --volatility 0.002
+```
 
-# Run a high volatility backtest
+---
+
+### Run a High-Volatility Backtest
+
+```bash
 python3 run.py --events 5000 --volatility 0.05
+```
 
-#run the dashboard
+---
+
+### Run the Real-Time Dashboard
+
+```bash
 python3 run.py --mode dashboard
+```
 
-#. Sample Backtest Results
-Here is a sample output demonstrating how the strategy performs in a high volatility environment.
+---
 
+### Run Backtest + Dashboard Together
+
+```bash
+./run_all.sh
+```
+
+---
+
+## 📊 Sample Backtest Results
+
+Example output from a high-volatility simulation:
+
+```
 --- Backtest Results ---
 Total Fills: 119
 Final PnL: -556.0
 Final Inventory: 465.0
 Win Rate: 0.61
+```
+
+These results illustrate how execution quality, volatility, and inventory risk directly affect performance.
+
+---
+
+## ⚠️ Limitations
+
+* Matching engine implemented in Python (single-threaded)
+* Synthetic data only (no live exchange feeds)
+* Strategy set intentionally minimal for clarity
+* No transaction cost or exchange fee modeling
+
+---
+
+## 🗺️ Future Enhancements
+
+* C++ acceleration of matching engine
+* Multi-asset order book support
+* Latency injection and network delay simulation
+* Additional market microstructure strategies
+* Integration with real historical market data
+
+---
+
+## 🎯 What This Project Demonstrates
+
+* Deep understanding of **market microstructure**
+* Deterministic order book implementation
+* Execution-driven strategy evaluation
+* Latency-aware system thinking
+* Clean, modular system design
+
+---
+
+## ⚠️ Disclaimer
+
+This project is intended for **educational and research purposes only** and does not represent a production trading system or financial advice.
+
+---
+
+## 📄 License
+
+MIT License
+
+```
+
+
+
